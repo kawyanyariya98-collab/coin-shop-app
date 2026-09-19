@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">فروشگاه سکه</string>
+    <string name="title_activity_main">فروشگاه سکه</string>
+    <string name="package_name">com.kaviyaniariya.coinshop</string>
+    <string name="custom_url_scheme">com.kaviyaniariya.coinshop</string>
+</resources>
