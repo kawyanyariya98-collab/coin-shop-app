@@ -239,11 +239,11 @@
     toastTimeout = setTimeout(() => toast.classList.remove('show'), 1800);
   }
 
-  function buyCoin(){
-    // در نسخه‌ی واقعی، اینجا باید فرآیند پرداخت درون‌برنامه‌ای بازار صدا زده شود
-    // و فقط پس از تایید موفق پرداخت، تابع onPurchaseSuccess() اجرا شود.
-    onPurchaseSuccess();
-  }
+    function buyCoin(){
+      Capacitor.Plugins.BazaarPurchase.purchase({ productId: "coin_1" })
+        .then(onPurchaseSuccess)
+        .catch(function(err){ showToast("خرید ناموفق: " + err); });
+    }
 
   function onPurchaseSuccess(){
     coins += 1;
