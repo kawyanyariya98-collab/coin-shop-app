@@ -10,9 +10,8 @@ import ir.cafebazaar.poolakey.Payment;
 import ir.cafebazaar.poolakey.config.PaymentConfiguration;
 import ir.cafebazaar.poolakey.config.SecurityCheck;
 import ir.cafebazaar.poolakey.request.PurchaseRequest;
-import ir.cafebazaar.poolakey.callback.PurchaseCallback;
-import ir.cafebazaar.poolakey.callback.ConnectionCallback;
-import ir.cafebazaar.poolakey.entity.PurchaseInfo;
+
+import kotlin.Unit;
 
 @CapacitorPlugin(name = "BazaarPurchase")
 public class BazaarPurchasePlugin extends Plugin {
@@ -31,39 +30,41 @@ public class BazaarPurchasePlugin extends Plugin {
         PaymentConfiguration config = new PaymentConfiguration(security);
         payment = new Payment(getContext(), config);
 
-        payment.connect(new ConnectionCallback() {
-            @Override
-            public void connectionSucceed() {
-                PurchaseRequest request = new PurchaseRequest(productId);
-                payment.purchaseProduct(getActivity(), request, new PurchaseCallback() {
-                    @Override
-                    public void purchaseSucceed(PurchaseInfo purchaseInfo) {
+        payment.connect(connectionCallback -> {
+            connectionCallback.connectionSucceed(() -> {
+                PurchaseRequest request = new PurchaseRequest(productId, "payload", null);
+                payment.purchaseProduct(getActivity().getActivityResultRegistry(), request, purchaseCallback -> {
+                    purchaseCallback.purchaseSucceed(purchaseEntity -> {
                         JSObject result = new JSObject();
                         result.put("success", true);
-                        result.put("productId", purchaseInfo.getProductId());
+                        result.put("productId", productId);
                         call.resolve(result);
-                    }
-
-                    @Override
-                    public void purchaseCanceled() {
+                        return Unit.INSTANCE;
+                    });
+                    purchaseCallback.purchaseCanceled(() -> {
                         call.reject("Purchase canceled by user");
-                    }
-
-                    @Override
-                    public void purchaseFailed(Throwable throwable) {
+                        return Unit.INSTANCE;
+                    });
+                    purchaseCallback.purchaseFailed(throwable -> {
                         call.reject("Purchase failed: " + throwable.getMessage());
-                    }
+                        return Unit.INSTANCE;
+                    });
+                    purchaseCallback.failedToBeginFlow(throwable -> {
+                        call.reject("Failed to begin purchase: " + throwable.getMessage());
+                        return Unit.INSTANCE;
+                    });
+                    return Unit.INSTANCE;
                 });
-            }
-
-            @Override
-            public void connectionFailed(Throwable throwable) {
+                return Unit.INSTANCE;
+            });
+            connectionCallback.connectionFailed(throwable -> {
                 call.reject("Connection to Bazaar failed: " + throwable.getMessage());
-            }
-
-            @Override
-            public void disconnected() {
-            }
+                return Unit.INSTANCE;
+            });
+            connectionCallback.disconnected(() -> {
+                return Unit.INSTANCE;
+            });
+            return Unit.INSTANCE;
         });
     }
 }

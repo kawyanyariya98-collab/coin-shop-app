@@ -1,2 +1,6 @@
 release-key.keystore
 release-key.keystore.b64
+
+android-sdk/
+keystore-base64.txt
+*.keystore
